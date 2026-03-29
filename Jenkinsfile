@@ -1,7 +1,7 @@
 pipeline {
     agent any
     environment {
-        GIT_REPO = 'https://github.com/Sumitshukla4020/MERN-Docker'
+        GIT_REPO = 'https://github.com/Sumeet2930/Secure-NoteBook'
         BRANCH = 'master'
     }
     stages {
