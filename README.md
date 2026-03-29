@@ -1,6 +1,6 @@
 # 🛡️ Secure Notebook - MERN Stack
 
-![Build Status](https://05c3-125-16-189-245.ngrok-free.app/buildStatus/icon?job=MERN-Docker)
+![Build Status](https://05c3-125-16-189-245.ngrok-free.app/buildStatus/icon?job=Secure-NoteBook)
 
 A secure, containerized full-stack application for managing personal notes with built-in encryption and sharing capabilities.
 
@@ -24,7 +24,7 @@ A secure, containerized full-stack application for managing personal notes with 
 ## 📁 Project Structure
 
 ```text
-MERN-Docker/
+Secure-NoteBook/
 ├── backend/            # Express server and API logic
 │   ├── middleware/     # Authentication middleware
 │   ├── models/        # Mongoose schemas (User, File)
@@ -47,8 +47,8 @@ MERN-Docker/
 
 1. **Clone the repository**:
    ```bash
-   git clone <repository-url>
-   cd MERN-Docker
+    git clone https://github.com/Sumeet2930/Secure-NoteBook
+    cd Secure-NoteBook
    ```
 
 2. **Environment Configuration**:
