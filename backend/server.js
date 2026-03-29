@@ -386,7 +386,8 @@ const cleanExpiredSharedFiles = async () => {
   }
 };
 
-const interval = 100; 
+// Run cleanup every hour (3,600,000 milliseconds) instead of every 100ms
+const interval = 1000 * 60 * 60; 
 setInterval(() => {
   cleanExpiredSharedFiles(); // Call cleanup function
 }, interval);
