@@ -420,6 +420,9 @@ app.get('/api/current-user', authenticate, async (req, res) => {
 
 // Start the server
 const port = process.env.PORT || 5050;
+const corsOrigin = process.env.FRONTEND_URL || "http://localhost:5173";
+
 app.listen(port, () => {
   console.log(`Backend server running on port ${port}`);
+  console.log(`CORS allowed origin: ${corsOrigin}`);
 });
