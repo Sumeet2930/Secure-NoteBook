@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Link, useParams } from "react-router-dom";
 import axios from 'axios';
 import { useNavigate } from "react-router-dom";
+import { encryptText, decryptText } from '../utils/crypto';
 
 const Edit = () => {
   const [title, setTitle] = useState("");
@@ -10,6 +11,11 @@ const Edit = () => {
   const [encryption, setEncryption] = useState(false);
   const [shareable, setShareable] = useState(false);
   const [passcode, setPasscode] = useState("");
+  
+  const [isLocked, setIsLocked] = useState(false);
+  const [unlockPasscode, setUnlockPasscode] = useState("");
+  const [cryptoError, setCryptoError] = useState("");
+  const [cryptoData, setCryptoData] = useState({ iv: "", salt: "", ciphertext: "" });
 
   const navigate = useNavigate();
   const { fileId } = useParams(); // Extract the fileId from the URL params
@@ -20,14 +26,18 @@ const Edit = () => {
     const fetchNote = async () => {
       try {
         const response = await axios.get(`http://localhost:5050/api/notes/${fileId}`);
-        const { fileName, content, encryption, shareable, passcode } = response.data;
+        const { fileName, content, encryption, shareable, iv, salt } = response.data;
 
-        // Set the state with the fetched data
         setTitle(fileName);
-        setContent(content);
         setEncryption(encryption);
         setShareable(shareable);
-        setPasscode(passcode || "");
+        
+        if (encryption) {
+          setIsLocked(true);
+          setCryptoData({ iv, salt, ciphertext: content });
+        } else {
+          setContent(content);
+        }
       } catch (error) {
         console.error("Error fetching the note:", error.response?.data || error.message);
         setMessage("Failed to load note data.");
@@ -46,12 +56,33 @@ const Edit = () => {
       return;
     }
 
+    let finalContent = content;
+    let finalIv, finalSalt;
+
+    if (encryption) {
+      if (!passcode) {
+        setMessage("Passcode is required for encrypted notes.");
+        return;
+      }
+      try {
+        const encryptedParams = await encryptText(content, passcode);
+        finalContent = encryptedParams.ciphertext;
+        finalIv = encryptedParams.iv;
+        finalSalt = encryptedParams.salt;
+      } catch (err) {
+        console.error("Encryption failed:", err);
+        setMessage("Failed to encrypt note.");
+        return;
+      }
+    }
+
     const updatedFileData = {
       fileName: title,
-      content,
+      content: finalContent,
       encryption,
       shareable,
-      passcode: encryption ? passcode : "",
+      iv: finalIv,
+      salt: finalSalt
     };
 
     try {
@@ -66,6 +97,49 @@ const Edit = () => {
       setMessage("An error occurred while updating the file.");
     }
   };
+
+  const handleUnlock = async () => {
+    try {
+      setCryptoError("");
+      const plaintext = await decryptText(cryptoData.ciphertext, cryptoData.iv, cryptoData.salt, unlockPasscode);
+      setContent(plaintext);
+      setPasscode(unlockPasscode); // Pre-fill the form passcode
+      setIsLocked(false);
+    } catch (err) {
+      setCryptoError("Invalid passcode.");
+    }
+  };
+
+  if (isLocked) {
+    return (
+      <div className="flex items-center justify-center h-screen bg-gray-200">
+        <div className="bg-white p-8 rounded-md shadow-md w-96 text-center">
+          <h2 className="text-xl font-semibold mb-4 text-black">Unlock to Edit</h2>
+          <p className="text-sm text-gray-500 mb-4">This note is End-to-End Encrypted.</p>
+          <input 
+            type="password" 
+            placeholder="Enter passcode"
+            className="w-full px-4 py-2 border rounded-md mb-3"
+            value={unlockPasscode}
+            onChange={(e) => setUnlockPasscode(e.target.value)}
+          />
+          {cryptoError && <p className="text-red-500 text-sm mb-3">{cryptoError}</p>}
+          <button 
+            className="w-full bg-blue-500 text-white px-4 py-2 rounded-md hover:bg-blue-600 transition"
+            onClick={handleUnlock}
+          >
+            Unlock
+          </button>
+          <button 
+            className="w-full mt-2 bg-gray-300 text-gray-700 px-4 py-2 rounded-md hover:bg-gray-400 transition"
+            onClick={() => navigate('/Home')}
+          >
+            Cancel
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <main className="w-full min-h-screen bg-zinc-100 font-['Helvetica'] flex flex-col">

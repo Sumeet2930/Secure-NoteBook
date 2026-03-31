@@ -29,6 +29,12 @@ const fileSchema = mongoose.Schema({
   passcode: {
     type: String, 
   },
+  iv: {
+    type: String, // Base64 Initialization Vector for AES-GCM
+  },
+  salt: {
+    type: String, // Base64 Salt for PBKDF2
+  },
   shareable: {
     type: Boolean,
     default: true,

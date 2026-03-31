@@ -19,9 +19,6 @@ const HomePage = () => {
   const [files, setFiles] = useState([]);
   const [sortedFiles, setSortedFiles] = useState([]);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
-  const [showPopup, setShowPopup] = useState(false);
-  const [passcode, setPasscode] = useState("");
-  const [errorMessage, setErrorMessage] = useState("");
   const [fileId, setFileId] = useState(null);
   const [showSharePopup, setShowSharePopup] = useState(false);
   const [users, setUsers] = useState([]);
@@ -106,22 +103,6 @@ const HomePage = () => {
     }
   };
 
-  const handleVerifyPasscode = async () => {
-    try {
-      const response = await axios.post("http://localhost:5050/api/verifyPasscode", {
-        fileId,
-        passcode,
-      });
-      if (response.data.success) {
-        setShowPopup(false);
-        navigate(`/view/${fileId}`);
-      } else {
-        setErrorMessage("Wrong passcode. Please try again.");
-      }
-    } catch (error) {
-      setErrorMessage("Error verifying passcode. Please try again.");
-    }
-  };
 
   const fetchUsers = async () => {
     try {
@@ -316,14 +297,7 @@ const HomePage = () => {
               <h2 className="text-lg sm:text-xl font-semibold mb-2">{file.fileName}</h2>
               <div className="flex justify-between items-center">
                 <button
-                  onClick={() => {
-                    if (file.encrypted) {
-                      setFileId(file._id);
-                      setShowPopup(true);
-                    } else {
-                      navigate(`/view/${file._id}`);
-                    }
-                  }}
+                  onClick={() => navigate(`/view/${file._id}`)}
                   className="text-blue-500 hover:underline hover:scale-105 transition-transform duration-300 text-sm sm:text-lg"
                 >
                   View
@@ -385,37 +359,6 @@ const HomePage = () => {
   </div>
 )}
 
-{showPopup && (
-      <div className={`fixed inset-0 ${isDark ? 'bg-black bg-opacity-75' : 'bg-black bg-opacity-50'} flex justify-center items-center z-50`}>
-        <div className={`rounded-lg shadow-lg p-6 w-80 ${isDark ? 'bg-white text-black' : 'bg-white text-black'}`}>
-          <h2 className="text-lg font-semibold mb-4">Enter Passcode</h2>
-          <input
-            type="password"
-            value={passcode}
-            onChange={(e) => setPasscode(e.target.value)}
-            placeholder="Enter passcode"
-            className="w-full px-4 py-2 border border-gray-300 rounded-md mb-3 focus:outline-none focus:ring-2 focus:ring-blue-500"
-          />
-          {errorMessage && (
-            <p className="text-red-500 text-sm mb-3">{errorMessage}</p>
-          )}
-          <div className="flex justify-between">
-            <button
-              onClick={handleVerifyPasscode} // Use the stored fileId
-              className="bg-blue-500 text-white px-4 py-2 rounded-md hover:bg-blue-600 transition-colors"
-            >
-              Verify
-            </button>
-            <button
-              onClick={() => setShowPopup(false)}
-              className="ml-2 bg-gray-300 text-gray-700 px-4 py-2 rounded-md hover:bg-gray-400 transition-colors"
-            >
-              Cancel
-            </button>
-          </div>
-        </div>
-      </div>
-    )}
 
     {/* Delete Confirmation Pop-up */}
 {showDeletePopup && (

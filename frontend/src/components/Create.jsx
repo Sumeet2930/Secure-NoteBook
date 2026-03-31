@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Link } from "react-router-dom";
 import axios from 'axios';
 import { useNavigate } from "react-router-dom";
+import { encryptText } from '../utils/crypto';
 
 const Create = () => {
   const [title, setTitle] = useState("");
@@ -24,12 +25,33 @@ const Create = () => {
       return;
     }
 
+    let finalContent = content;
+    let finalIv, finalSalt;
+
+    if (encryption) {
+      if (!passcode) {
+        setMessage("Passcode is required for encrypted notes.");
+        return;
+      }
+      try {
+        const encryptedParams = await encryptText(content, passcode);
+        finalContent = encryptedParams.ciphertext;
+        finalIv = encryptedParams.iv;
+        finalSalt = encryptedParams.salt;
+      } catch (err) {
+        console.error("Encryption failed:", err);
+        setMessage("Failed to encrypt note.");
+        return;
+      }
+    }
+
     const fileData = {
       fileName: title,
-      content,
+      content: finalContent,
       encryption,
       shareable,
-      passcode: encryption ? passcode : "",
+      iv: finalIv,
+      salt: finalSalt
     };
 
     try {
