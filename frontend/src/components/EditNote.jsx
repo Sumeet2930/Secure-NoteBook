@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useParams } from "react-router-dom";
-import axios from 'axios';
+import api from '../utils/api';
 import { useNavigate } from "react-router-dom";
 import { encryptText, decryptText } from '../utils/crypto';
 
@@ -19,13 +19,12 @@ const Edit = () => {
 
   const navigate = useNavigate();
   const { fileId } = useParams(); // Extract the fileId from the URL params
-  axios.defaults.withCredentials = true;
 
   // Fetch existing note data
   useEffect(() => {
     const fetchNote = async () => {
       try {
-        const response = await axios.get(`http://localhost:5050/api/notes/${fileId}`);
+        const response = await api.get(`/api/notes/${fileId}`);
         const { fileName, content, encryption, shareable, iv, salt } = response.data;
 
         setTitle(fileName);
@@ -87,7 +86,7 @@ const Edit = () => {
 
     try {
       // Send updated file data to backend
-      const response = await axios.put(`http://localhost:5050/api/notes/${fileId}`, updatedFileData);
+      const response = await api.put(`/api/notes/${fileId}`, updatedFileData);
 
       const { message } = response.data;
       setMessage(message || "Updated Successfully");

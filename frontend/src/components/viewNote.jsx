@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { Link, useParams } from "react-router-dom";
 import { decryptText } from "../utils/crypto";
+import api from "../utils/api";
 
 const ViewNote = () => {
   const { fileId } = useParams();
@@ -15,8 +16,8 @@ const ViewNote = () => {
   useEffect(() => {
     const fetchFileData = async () => {
       try {
-        const response = await fetch(`http://localhost:5050/api/files/${fileId}`);
-        const data = await response.json();
+        const response = await api.get(`/api/files/${fileId}`);
+        const data = response.data;
         setFileData(data);
         if (data.encryption) {
           setIsEncrypted(true);

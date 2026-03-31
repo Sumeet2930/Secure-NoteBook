@@ -128,6 +128,35 @@ Secure-NoteBook/
 
 ---
 
+## 🌐 Deployment (Production)
+
+This project is configured for easy deployment on **Vercel** (Frontend) and **Render** (Backend).
+
+### 1. Backend (Render)
+1. Create a new **Web Service** on Render and connect your repository.
+2. Set the **Root Directory** to `backend`.
+3. Set the **Build Command** to `npm install`.
+4. Set the **Start Command** to `node server.js`.
+5. Add the following **Environment Variables**:
+   - `MONGO_URI`: Your MongoDB Atlas connection string.
+   - `JWT_SECRET`: A long, random string for signing tokens.
+   - `FRONTEND_URL`: Your deployed Vercel URL (e.g., `https://your-app.vercel.app`).
+   - `PORT`: `5050` (or leave it blank, Render sets it automatically).
+
+### 2. Frontend (Vercel)
+1. Create a new project on Vercel and connect your repository.
+2. Set the **Root Directory** to `frontend`.
+3. Vercel should automatically detect **Vite** settings:
+   - **Build Command**: `vite build`
+   - **Output Directory**: `dist`
+4. Add the following **Environment Variable**:
+   - `VITE_API_BASE_URL`: Your deployed Render backend URL (e.g., `https://your-backend.onrender.com`).
+
+> [!IMPORTANT]
+> **Cross-Domain Cookies**: The backend is configured to use `SameSite: 'None'` and `Secure: true`. Ensure your Vercel frontend is served over HTTPS (default) for authentication to work correctly.
+
+---
+
 ## 🧪 API Endpoints (Summary)
 
 | Method | Endpoint | Description |

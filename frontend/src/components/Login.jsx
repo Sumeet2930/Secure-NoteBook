@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import axios from 'axios';
+import api from '../utils/api';
 import { useNavigate } from 'react-router-dom';
 
 const Login = () => {
@@ -11,10 +11,9 @@ const Login = () => {
   const handleLogin = async (e) => {
     e.preventDefault(); // Prevent the form from refreshing the page
     try {
-      const response = await axios.post(
-        'http://localhost:5050/api/login', // This is your backend endpoint
-        { email, password },
-        { withCredentials: true } // Ensures cookies are included
+      const response = await api.post(
+        '/api/login',
+        { email, password }
       );
       if (response.data === "logged in") {
         navigate('/Home'); // Redirect to the home page

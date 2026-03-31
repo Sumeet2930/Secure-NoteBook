@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import axios from "axios";
+import api from '../utils/api';
 
 const Register = () => {
   const [email, setEmail] = useState("");
@@ -11,7 +11,7 @@ const Register = () => {
 
     try {
       // Send a POST request to the backend
-      const response = await axios.post("http://localhost:5050/api/register", { email, password });
+      const response = await api.post("/api/register", { email, password });
       setMessage("Account created successfully!");
       console.log("Response from server:", response.data); // Log server response
     } catch (error) {

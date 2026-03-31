@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Link } from "react-router-dom";
-import axios from 'axios';
+import api from '../utils/api';
 import { useNavigate } from "react-router-dom";
 import { encryptText } from '../utils/crypto';
 
@@ -14,7 +14,6 @@ const Create = () => {
   const [passcode, setPasscode] = useState("");
 
   const navigate = useNavigate();
-  axios.defaults.withCredentials = true;
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -56,7 +55,7 @@ const Create = () => {
 
     try {
       // Send file data to backend
-      const response = await axios.post("http://localhost:5050/api/upload", fileData);
+      const response = await api.post("/api/upload", fileData);
 
       // Capture the fileId and message from the response
       const { fileId, message } = response.data;

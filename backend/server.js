@@ -18,7 +18,7 @@ app.use(express.urlencoded({ extended: true }));
 // Configure CORS
 app.use(
   cors({
-    origin: "http://localhost:5173", // Frontend origin
+    origin: process.env.FRONTEND_URL || "http://localhost:5173", // Use environment variable
     credentials: true, // Allow cookies to be sent
   })
 );
@@ -48,10 +48,10 @@ app.post("/api/register", async (req, res) => {
     });
 
     // Generate JWT token
-    const token = jwt.sign({ email }, "shhhhh");
+    const token = jwt.sign({ email }, process.env.JWT_SECRET || "shhhhh");
 
     // Set a secure HTTP-only cookie
-    res.cookie("token", token, { httpOnly: true, secure: true, sameSite: "strict" });
+    res.cookie("token", token, { httpOnly: true, secure: true, sameSite: "None" });
 
     // Send success response
     res.status(201).send({ message: "User registered successfully", user: createdUser });
@@ -77,8 +77,8 @@ app.post("/api/login", async (req, res) => {
     if (err) console.error("Error comparing passwords:", err);
 
     if (result) {
-      let token = jwt.sign({ email: user.email }, "shhhh");
-      res.cookie("token", token, { httpOnly: true });
+      let token = jwt.sign({ email: user.email }, process.env.JWT_SECRET || "shhhhh");
+      res.cookie("token", token, { httpOnly: true, secure: true, sameSite: "None" });
       res.send("logged in");
     } else {
       res.status(401).send("Invalid credentials");
@@ -96,8 +96,8 @@ app.get('/api/verify-token', (req, res) => {
   }
 
   try {
-    // Verify the token (using a library like jwt.verify if using JWT)
-    const decoded = jwt.verify(token, 'shhhh'); 
+    // Verify the token 
+    const decoded = jwt.verify(token, process.env.JWT_SECRET || "shhhhh"); 
     res.status(200).send('Authenticated'); // Token is valid
   } catch (error) {
     res.status(401).send('Invalid token'); // Token is invalid or expired
@@ -419,6 +419,7 @@ app.get('/api/current-user', authenticate, async (req, res) => {
 // });
 
 // Start the server
-app.listen(process.env.PORT, () => {
-  console.log("Backend server running on port 5050");
+const port = process.env.PORT || 5050;
+app.listen(port, () => {
+  console.log(`Backend server running on port ${port}`);
 });

@@ -1,6 +1,6 @@
 import { useTheme } from "../context/ThemeContext";
 import React, { useEffect, useState } from "react";
-import axios from "axios";
+import api from "../utils/api";
 import { useNavigate, Link } from "react-router-dom";
 import secureIcon from '../images/secure.png';
 import { 
@@ -31,15 +31,15 @@ const HomePage = () => {
 
   // Fetch files on page load
   useEffect(() => {
-    axios
-      .get("http://localhost:5050/api/files", { withCredentials: true })
+    api
+      .get("/api/files")
       .then((response) => {
         setFiles(response.data);
         setSortedFiles(response.data);
       })
       .catch((error) => {
         console.error("Error fetching files:", error);
-        navigate("http://localhost:5050/login");
+        navigate("/login");
       });
   }, [navigate]);
 
@@ -48,7 +48,7 @@ const HomePage = () => {
     // fetch the sahred files
     const fetchSharedFiles = async () => {
       try {
-        const response = await axios.get("http://localhost:5050/api/shared-files");
+        const response = await api.get("/api/shared-files");
         setSharedFiles(response.data);
       }catch (error) {
         console.error("Error fetching shared files:", error);
@@ -62,9 +62,7 @@ const HomePage = () => {
   useEffect(() => {
     const fetchCurrentUser = async () => {
       try {
-        const response = await axios.get("http://localhost:5050/api/current-user", {
-          headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
-        });
+        const response = await api.get("/api/current-user");
         setCurrentUser(response.data);
       } catch (error) {
         console.error("Error fetching current user:", error);
@@ -76,7 +74,7 @@ const HomePage = () => {
   const handleLogout = async (e) => {
     e.preventDefault();
     try {
-      const response = await axios.get("http://localhost:5050/api/logout", { withCredentials: true });
+      const response = await api.get("/api/logout");
       if (response.data === "Logged out") {
         navigate("/login");
       } else {
@@ -94,7 +92,7 @@ const HomePage = () => {
 
   const deleteFile = async (fileId) => {
     try {
-      await axios.delete(`http://localhost:5050/api/files/${fileId}`, { withCredentials: true });
+      await api.delete(`/api/files/${fileId}`);
       setFiles(files.filter(file => file._id !== fileId));
       setSortedFiles(sortedFiles.filter(file => file._id !== fileId));
       setShowDeletePopup(false)
@@ -106,7 +104,7 @@ const HomePage = () => {
 
   const fetchUsers = async () => {
     try {
-      const response = await axios.get("http://localhost:5050/api/users", { withCredentials: true });
+      const response = await api.get("/api/users");
       setUsers(response.data);
     } catch (error) {
       console.error("Error fetching users:", error);

@@ -9,7 +9,7 @@ const authenticate = async (req, res, next) => {
   }
 
   try {
-    const decoded = jwt.verify(token, 'shhhh'); // Replace 'shhhh' with your secret key
+    const decoded = jwt.verify(token, process.env.JWT_SECRET || 'shhhhh'); // Use secret key from env
     const user = await userModel.findOne({ email: decoded.email });
 
     if (!user) {
