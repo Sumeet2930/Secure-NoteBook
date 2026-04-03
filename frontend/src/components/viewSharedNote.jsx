@@ -1,10 +1,13 @@
 import React, { useEffect, useState } from "react";
-import { Link, useParams } from "react-router-dom";
+import { Link, useParams, useNavigate } from "react-router-dom";
 import { decryptText } from "../utils/crypto";
 import api from "../utils/api";
+import secureIcon from '../images/secure.png';
+import { Button } from './Button';
 
 const viewSharedNote = () => {
   const { fileId } = useParams();
+  const navigate = useNavigate();
   const [fileData, setFileData] = useState(null);
   const [loading, setLoading] = useState(true);
 
@@ -47,90 +50,107 @@ const viewSharedNote = () => {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center h-screen bg-gray-200">
-        <div className="text-xl font-semibold text-gray-600">Loading...</div>
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="text-xl font-medium text-white/50 animate-pulse font-label tracking-widest uppercase">Intercepting Signal...</div>
       </div>
     );
   }
 
   if (!fileData) {
     return (
-      <div className="flex items-center justify-center h-screen bg-gray-200">
-        <div className="text-xl font-semibold text-gray-600">
-          File not found.
+      <div className="flex flex-col items-center justify-center min-h-screen space-y-4">
+        <div className="text-2xl font-bold font-headline text-error">
+          Signal Lost or Access Denied
         </div>
+        <Button variant="secondary" onClick={() => navigate('/Home')}>Return to Command Center</Button>
       </div>
     );
   }
 
   if (isEncrypted) {
     return (
-      <div className="flex items-center justify-center h-screen bg-gray-200">
-        <div className="bg-white p-8 rounded-md shadow-md w-96 text-center">
-          <h2 className="text-xl font-semibold mb-4 text-black">Encrypted Shared Note</h2>
-          <p className="text-sm text-gray-500 mb-4">You must have the passcode from the owner to view this.</p>
+      <main className="w-full min-h-screen font-body antialiased overflow-y-auto flex items-center justify-center p-4">
+        <div className="bg-surface-container-highest border border-white/10 rounded-3xl p-8 max-w-sm w-full shadow-2xl relative">
+          <button onClick={() => navigate('/Home')} className="absolute top-4 right-4 text-white/30 hover:text-white transition-colors">
+            ✕
+          </button>
+          <h2 className="text-2xl font-bold font-headline mb-2 text-center mt-2">Classified Data</h2>
+          <p className="text-white/50 mb-8 text-sm text-center">E2E Protected. Passcode required.</p>
           <input 
             type="password" 
-            placeholder="Enter passcode to decrypt"
-            className="w-full px-4 py-2 border rounded-md mb-3"
+            placeholder="Enter secure passcode"
+            className="w-full p-3 bg-transparent border border-outline-variant rounded-xl mb-4 outline-none focus:border-primary text-white placeholder-white/30 font-label"
             value={passcode}
             onChange={(e) => setPasscode(e.target.value)}
+            onKeyDown={(e) => { if(e.key === 'Enter') handleDecrypt(); }}
           />
-          {cryptoError && <p className="text-red-500 text-sm mb-3">{cryptoError}</p>}
-          <button 
-            className="w-full bg-blue-500 text-white px-4 py-2 rounded-md hover:bg-blue-600 transition"
-            onClick={handleDecrypt}
-          >
-            Unlock
-          </button>
+          {cryptoError && <p className="text-error text-sm mb-4 text-center">{cryptoError}</p>}
+          <Button variant="primary" className="w-full justify-center" onClick={handleDecrypt}>
+            Unlock Content
+          </Button>
         </div>
-      </div>
+      </main>
     )
   }
 
   return (
-    <main className="w-full min-h-screen bg-zinc-100 font-['Helvetica'] flex flex-col">
-      {/* Navigation */}
-      <nav className="flex px-10 justify-between py-5 bg-zinc-200 shadow-md">
-        <h3 className="text-2xl tracking-tight">Secure-NoteBook</h3>
-        <div className="navlinks flex gap-5">
-          <Link className="tracking-tight" to="/Home">Home</Link>
-          <Link className="tracking-tight" to="/create">Create</Link>
+    <main className="w-full min-h-screen text-on-surface font-body antialiased overflow-y-auto">
+      {/* App Header */}
+      <nav className="sticky top-0 bg-[#131313]/70 backdrop-blur border-b border-white/10 z-40 px-6 py-4 flex justify-between items-center">
+        <div className="flex items-center space-x-3">
+          <img src={secureIcon} alt="icon" className="h-7 w-7 opacity-90" />
+          <h3 className="text-xl font-medium tracking-tight text-primary">Secure-NoteBook</h3>
+        </div>
+        <div className="flex gap-6 items-center">
+          <Link className="text-sm font-medium text-white/50 hover:text-primary transition-colors duration-300 hidden sm:block" to="/Home">
+            Dashboard
+          </Link>
+          <Button variant="secondary" size="sm" onClick={() => navigate('/Home')}>
+            Close Signal
+          </Button>
         </div>
       </nav>
 
-      {/* Note Content */}
-      <div className="px-10 flex-grow flex items-center justify-center">
-        <div className="w-full max-w-3xl bg-white p-8 rounded-md shadow-md">
-          <h3 className="capitalize text-2xl font-medium mb-5 tracking-tight border-b pb-3">
-            {fileData.fileName}
-          </h3>
+      {/* Note Content Base */}
+      <div className="container max-w-4xl mx-auto px-4 py-8 md:py-12">
+        <div className="bg-surface-container/60 glass-panel border border-outline-variant/15 p-8 md:p-12 rounded-3xl shadow-2xl relative overflow-hidden">
+          <div className="absolute top-0 right-0 w-64 h-64 bg-primary/5 blur-[80px] pointer-events-none"></div>
 
-          {/* Date */}
-          <h4 className="text-gray-500 text-sm mb-5">
-            Created on{" "}
-            <span className="text-gray-700 font-medium">
-              {new Date(fileData.createdAt).toLocaleDateString()}
-            </span>
-          </h4>
-
-          {/* Note Content */}
-          <div className="bg-zinc-100 px-4 py-5 rounded-md mb-5 shadow-inner" style={{ height: '300px' }}>
-  <p className="text-gray-700 leading-relaxed whitespace-pre-wrap">
-    {decryptedContent}
-  </p>
-</div>
-
-
-          {/* Action Buttons */}
-          <div className="flex justify-between items-center border-t pt-4">
-            <Link
-              to="/home"
-              className="px-5 py-3 bg-gray-300 text-gray-700 rounded-md hover:bg-gray-400 transition"
-            >
-              Back
-            </Link>
+          {/* Note Title & Meta */}
+          <div className="border-b border-outline-variant/10 pb-6 mb-8 flex flex-col md:flex-row justify-between items-start md:items-end gap-4 relative z-10">
+            <div>
+              <h1 className="text-3xl lg:text-4xl font-bold tracking-tight text-white">
+                {fileData.fileName}
+              </h1>
+              <h4 className="text-on-surface-variant font-label text-xs tracking-widest mt-3 uppercase">
+                Created on {new Date(fileData.createdAt).toLocaleDateString()}
+              </h4>
+            </div>
+            
+            <div className="flex flex-col items-end gap-2 text-right">
+              <span className="bg-primary/10 text-primary border border-primary/20 px-3 py-1 rounded-full font-label text-[10px] uppercase tracking-widest font-bold">
+                Shared Access
+              </span>
+              <span className="text-xs text-white/40 font-label tracking-widest">
+                Owner: {fileData.email}
+              </span>
+            </div>
           </div>
+
+          {/* Actual File Content */}
+          <div className="bg-[#0b0b0b]/60 rounded-2xl border border-white/5 p-6 md:p-8 min-h-[300px] relative z-10">
+            <p className="text-white/90 leading-relaxed whitespace-pre-wrap font-body text-lg">
+              {decryptedContent}
+            </p>
+          </div>
+
+          {/* Action Footer Button Group */}
+          <div className="flex justify-between items-center pt-8 mt-4 relative z-10">
+            <Button variant="secondary" onClick={() => navigate('/Home')}>
+              Return to Control Center
+            </Button>
+          </div>
+          
         </div>
       </div>
     </main>
