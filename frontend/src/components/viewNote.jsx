@@ -4,6 +4,7 @@ import { decryptText } from "../utils/crypto";
 import api from "../utils/api";
 import secureIcon from '../images/secure.png';
 import { Button } from './Button';
+import { Excalidraw } from "@excalidraw/excalidraw";
 
 const ViewNote = () => {
   const { fileId } = useParams();
@@ -144,11 +145,94 @@ const ViewNote = () => {
             )}
           </div>
 
-          {/* Actual File Content */}
+          {/* Actual File Content parsed via the Canvas Engine */}
           <div className="bg-neutral-950/50 rounded-2xl border border-white/5 p-6 md:p-8 min-h-[300px]">
-            <p className="text-white/90 leading-relaxed whitespace-pre-wrap font-sans text-lg">
-              {decryptedContent}
-            </p>
+            {(() => {
+              let parsedData = null;
+              let isLegacy = true;
+
+              try {
+                const json = JSON.parse(decryptedContent);
+                if (json && (json.version === 2 || json.version === 3)) {
+                  parsedData = json;
+                  isLegacy = false;
+                }
+              } catch (e) {}
+
+              if (isLegacy) {
+                return (
+                  <p className="text-white/90 leading-relaxed whitespace-pre-wrap font-sans text-lg">
+                    {decryptedContent}
+                  </p>
+                );
+              }
+
+              if (parsedData.version === 3) {
+                return (
+                  <div className="w-full h-[600px] border border-white/10 rounded-xl overflow-hidden pointer-events-auto relative z-10">
+                     <Excalidraw 
+                        theme="dark" 
+                        initialData={parsedData.excalidraw}
+                        viewModeEnabled={true}
+                     />
+                  </div>
+                );
+              }
+
+              return (
+                <div className="flex flex-col gap-8">
+                  {/* Rich Text Core */}
+                  {parsedData.text && (
+                    <p className="text-white/90 leading-relaxed whitespace-pre-wrap font-sans text-lg border-b border-white/5 pb-6">
+                      {parsedData.text}
+                    </p>
+                  )}
+                  
+                  {/* Attachments rendering */}
+                  {parsedData.attachments && parsedData.attachments.length > 0 && (
+                    <div>
+                      <h4 className="text-sm font-bold text-lime-400 mb-3 tracking-widest uppercase">Encrypted Attachments</h4>
+                      <div className="flex flex-wrap gap-4">
+                        {parsedData.attachments.map((file, idx) => (
+                          <div key={idx} className="bg-surface-container border border-white/10 rounded-xl overflow-hidden shadow-lg w-fit max-w-[280px]">
+                            {file.type.includes('image') ? (
+                              <div>
+                                <img src={file.data} alt="attachment" className="w-full h-auto object-cover max-h-48" />
+                                <div className="p-3 text-xs font-bold text-white/50 truncate bg-neutral-900 border-t border-white/5">
+                                  {file.name}
+                                </div>
+                              </div>
+                            ) : (
+                              <div className="p-4 flex items-center gap-3">
+                                <span className="material-symbols-outlined text-lime-400">description</span>
+                                <span className="text-sm font-medium text-white truncate w-32">{file.name}</span>
+                                <a download={file.name} href={file.data} className="bg-primary/20 text-lime-400 hover:bg-primary hover:text-neutral-900 px-3 py-1 rounded-full text-xs font-bold transition-colors">
+                                  Download
+                                </a>
+                              </div>
+                            )}
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Native Excalidraw Viewer */}
+                  {parsedData.excalidraw && (
+                    <div>
+                       <h4 className="text-sm font-bold text-lime-400 mb-3 tracking-widest uppercase">Canvas Drawings</h4>
+                       <div className="w-full h-[500px] border border-white/10 rounded-xl overflow-hidden pointer-events-auto">
+                         <Excalidraw 
+                            theme="dark" 
+                            initialData={{ elements: parsedData.excalidraw }}
+                            viewModeEnabled={true}
+                         />
+                       </div>
+                    </div>
+                  )}
+                </div>
+              );
+            })()}
           </div>
 
           {/* Action Footer Button Group */}
@@ -156,9 +240,14 @@ const ViewNote = () => {
             <Button variant="secondary" onClick={() => navigate('/Home')}>
               Back to list
             </Button>
-            <Button variant="primary" onClick={() => navigate(`/edit/${fileId}`)}>
-              Edit Note
-            </Button>
+            <div className="flex gap-4">
+              <Button variant="secondary" onClick={() => window.print()} title="Export Note View via Print renderer">
+                Export Layout
+              </Button>
+              <Button variant="primary" onClick={() => navigate(`/edit/${fileId}`)}>
+                Edit Content
+              </Button>
+            </div>
           </div>
           
         </div>
