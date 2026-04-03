@@ -1,4 +1,3 @@
-import { useTheme } from "../context/ThemeContext";
 import React, { useEffect, useState } from "react";
 import api from "../utils/api";
 import { useNavigate, Link } from "react-router-dom";
@@ -6,19 +5,14 @@ import secureIcon from '../images/secure.png';
 import { 
   RiLockLine, 
   RiCheckLine, 
-  RiMenuLine, 
-  RiCloseLine, 
   RiDeleteBin6Line, 
-  RiShareLine, 
-  RiShareForwardLine 
 } from "react-icons/ri";
-import { use } from "react";
+import axios from 'axios';
+import { Button } from './Button';
 
 const HomePage = () => {
-  const { isDark, toggleTheme } = useTheme();
   const [files, setFiles] = useState([]);
   const [sortedFiles, setSortedFiles] = useState([]);
-  const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [fileId, setFileId] = useState(null);
   const [showSharePopup, setShowSharePopup] = useState(false);
   const [users, setUsers] = useState([]);
@@ -29,7 +23,6 @@ const HomePage = () => {
   const [deleteFileId, setDeleteFileId] = useState(null);
   const navigate = useNavigate();
 
-  // Fetch files on page load
   useEffect(() => {
     api
       .get("/api/files")
@@ -43,22 +36,18 @@ const HomePage = () => {
       });
   }, [navigate]);
 
-
   useEffect(() => {
-    // fetch the sahred files
     const fetchSharedFiles = async () => {
       try {
         const response = await api.get("/api/shared-files");
         setSharedFiles(response.data);
-      }catch (error) {
+      } catch (error) {
         console.error("Error fetching shared files:", error);
       }
     };
     fetchSharedFiles();
   }, []);
 
-
-  // Fetch current user
   useEffect(() => {
     const fetchCurrentUser = async () => {
       try {
@@ -86,8 +75,8 @@ const HomePage = () => {
   };
 
   const handleDeleteFileConfirmation = (fileId) => {
-    setDeleteFileId(fileId); // Store the fileId for the file to be deleted
-    setShowDeletePopup(true); // Show the confirmation pop-up
+    setDeleteFileId(fileId);
+    setShowDeletePopup(true); 
   };
 
   const deleteFile = async (fileId) => {
@@ -95,12 +84,11 @@ const HomePage = () => {
       await api.delete(`/api/files/${fileId}`);
       setFiles(files.filter(file => file._id !== fileId));
       setSortedFiles(sortedFiles.filter(file => file._id !== fileId));
-      setShowDeletePopup(false)
+      setShowDeletePopup(false);
     } catch (error) {
       console.error("Error deleting file:", error);
     }
   };
-
 
   const fetchUsers = async () => {
     try {
@@ -117,10 +105,9 @@ const HomePage = () => {
       return;
     }
     try {
-      const response = await axios.post(
+      const response = await api.post(
         "/api/shareFile", 
         { fileId, email: selectedUser, senderEmail: currentUser?.email }, 
-        { withCredentials: true }
       );
       if (response.data.success) {
         alert("File shared successfully!");
@@ -135,254 +122,201 @@ const HomePage = () => {
   };
 
   return (
-    <main
-      className={`w-full min-h-screen ${isDark ? "bg-gray-800 text-white" : "bg-white text-black"} font-['Helvetica'] p-4 sm:p-6 overflow-y-auto`}
-    >
-      <nav className="flex justify-between py-2 sm:py-4 items-center sm:px-6 px-4 relative">
-      <div className="flex items-center space-x-2">
-  <img src={secureIcon} alt="icon" className="h-6 w-6" />
-  <h3 className="text-xl sm:text-xl font-semibold tracking-tight">Secure-NoteBook</h3>
-</div>
-
-        <button
-          onClick={() => setIsMenuOpen(!isMenuOpen)}
-          className="text-xl sm:text-2xl sm:hidden hover:scale-110 transition-transform duration-300"
-        >
-          {isMenuOpen ? <RiCloseLine /> : <RiMenuLine />}
-        </button>
-        <div
-          className={`absolute top-0 left-0 w-3/4 h-screen bg-gray-800 sm:hidden transition-transform ${isMenuOpen ? 'translate-x-0' : '-translate-x-full'} z-50 ease-in-out`}
-        >
-          <div className="flex flex-col items-center justify-center space-y-4 mt-24">
-            <Link to="/Home" className="text-white text-lg font-medium hover:text-blue-400 transition-colors duration-300" onClick={() => setIsMenuOpen(false)}>
-              Home
-            </Link>
-            <Link to="/create" className="text-white text-lg font-medium hover:text-blue-400 transition-colors duration-300" onClick={() => setIsMenuOpen(false)}>
-              Create
-            </Link>
-            <button onClick={handleLogout} className="text-white text-lg font-medium hover:text-red-400 transition-colors duration-300">
-              Logout
-            </button>
-          </div>
+    <main className="w-full min-h-screen bg-neutral-950 text-white font-sans antialiased overflow-y-auto">
+      {/* Dashboard App Header */}
+      <nav className="sticky top-0 bg-neutral-950/80 backdrop-blur border-b border-white/10 z-40 px-6 py-4 flex justify-between items-center">
+        <div className="flex items-center space-x-3">
+          <img src={secureIcon} alt="icon" className="h-7 w-7 opacity-90" />
+          <h3 className="text-xl font-medium tracking-tight">Secure-NoteBook</h3>
         </div>
-        <div className="hidden sm:flex gap-4 items-center">
-          <Link className="text-sm sm:text-lg font-medium hover:text-blue-500 transition-colors duration-300" to="/Home">
-            Home
+        <div className="flex gap-6 items-center">
+          <Link className="text-sm font-medium text-white/50 hover:text-white transition-colors duration-300 hidden sm:block" to="/Home">
+            Dashboard
           </Link>
-          <Link className="text-sm sm:text-lg font-medium hover:text-blue-500 transition-colors duration-300" to="/create">
-            Create
+          <Link className="text-sm font-medium text-white/50 hover:text-white transition-colors duration-300 hidden sm:block" to="/create">
+            Create Note
           </Link>
-        </div>
-        <div className="flex gap-3 sm:gap-4 items-center">
-          <button onClick={toggleTheme} className="text-lg sm:text-2xl hover:rotate-180 transition-transform duration-500">
-            {isDark ? "🌙" : "☀️"}
-          </button>
-          <button onClick={handleLogout} className="text-lg sm:text-2xl hover:text-red-400 transition-colors duration-300" title="Logout">
-            <i className="ri-logout-box-line"></i>
-          </button>
+          <Button variant="secondary" size="sm" onClick={handleLogout}>
+            Logout
+          </Button>
         </div>
       </nav>
 
-      <div className="p-4 sm:p-6">
-  {/* Header Section */}
-  <div className="border-b-4 border-yellow-500 mb-6">
-    <h1 className="text-2xl sm:text-xl text-grey-300 pb-2">Shared Files</h1>
-  </div>
+      <div className="container max-w-6xl mx-auto px-4 py-12">
+        {/* Header Section */}
+        <div className="mb-12 flex flex-col sm:flex-row justify-between items-center gap-4">
+          <h1 className="text-4xl lg:text-5xl font-medium">Dashboard</h1>
+          <Button variant="primary" onClick={() => navigate('/create')}>
+            + New Note
+          </Button>
+        </div>
 
-  {/* Shared Files Content */}
-  {sharedFiles.length === 0 ? (
-    <p className="text-gray-500 text-center text-sm sm:text-lg">
-      No shared files available.
-    </p>
-  ) : (
-    <div className="bg-gray-100 rounded-lg shadow-md">
-      {/* Scrollable List Container */}
-      <ul
-        className="divide-y divide-gray-300 overflow-y-auto"
-        style={{ maxHeight: "200px" }} // Adjust height to fit 3 rows
-      >
-        {sharedFiles.map((file) => {
-          const remainingTime = (expiry) => {
-            const diff = new Date(expiry) - new Date();
-            if (diff <= 0) return "Expired";
-            const hours = Math.floor(diff / (1000 * 60 * 60));
-            const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
-            const seconds = Math.floor((diff % (1000 * 60)) / 1000);
+        {/* Shared Files Content */}
+        <div className="bg-neutral-900/50 backdrop-blur border border-white/10 rounded-3xl p-6 md:p-8 mb-16 shadow-2xl">
+          <h2 className="text-2xl font-medium mb-6 flex items-center gap-2">
+            <span className="bg-lime-400 size-3 rounded-full inline-block"></span>
+            Shared Files
+          </h2>
+          
+          {sharedFiles.length === 0 ? (
+            <p className="text-white/30 text-center py-8 px-4 rounded-2xl border border-white/5 border-dashed">
+              No securely shared files available.
+            </p>
+          ) : (
+            <div className="overflow-x-auto">
+              <ul className="divide-y divide-white/10">
+                {sharedFiles.map((file) => {
+                  const remainingTime = (expiry) => {
+                    const diff = new Date(expiry) - new Date();
+                    if (diff <= 0) return "Expired";
+                    const hours = Math.floor(diff / (1000 * 60 * 60));
+                    const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+                    const seconds = Math.floor((diff % (1000 * 60)) / 1000);
 
-            if (hours > 0) return `${hours}h ${minutes}m remaining`;
-            if (minutes > 0) return `${minutes}m ${seconds}s remaining`;
-            return `${seconds}s remaining`;
-          };
+                    if (hours > 0) return `${hours}h ${minutes}m`;
+                    if (minutes > 0) return `${minutes}m ${seconds}s`;
+                    return `${seconds}s`;
+                  };
 
-          return (
-            <li
-              key={file._id}
-              className="flex items-center justify-between p-4 hover:bg-gray-200 transition-colors duration-300"
-            >
-              {/* File Details */}
-              <div className="flex items-center space-x-4 flex-grow">
-                {/* File Name */}
-                <span className="text-black text-sm sm:text-lg font-semibold">
-                  {file.fileName}
-                </span>
+                  return (
+                    <li
+                      key={file._id}
+                      className="flex flex-col sm:flex-row items-start sm:items-center justify-between p-4 hover:bg-white/5 rounded-xl transition-colors duration-300 group gap-4"
+                    >
+                      <div className="flex items-center space-x-4 flex-grow">
+                        <span className="text-lg font-medium">
+                          {file.fileName}
+                        </span>
+                        <span className="text-white/50 text-sm">
+                          Sent by: <span className="text-lime-400">{file.email}</span>
+                        </span>
+                      </div>
 
-                {/* Sender Email */}
-                <span className="text-gray-500 text-xs sm:text-sm">
-                  Sent by: <span className="text-blue-500">{file.email}</span>
-                </span>
-              </div>
-
-              {/* Expiry and Actions */}
-              <div className="flex items-center space-x-4 flex-none">
-                {/* Remaining Time */}
-                {file.expiry && (
-                  <span className="text-red-500 text-xs sm:text-sm">
-                    {remainingTime(file.expiry)}
-                  </span>
-                )}
-
-                {/* View Button */}
-                <button
-                  onClick={() => navigate(`/sharedView/${file._id}`)}
-                  className="text-blue-500 hover:underline hover:scale-105 transition-transform duration-300 text-sm sm:text-lg"
-                >
-                  View
-                </button>
-              </div>
-            </li>
-          );
-        })}
-      </ul>
-    </div>
-  )}
-
-  {/* Horizontal Line Separator */}
-  <hr className="mt-6 border-t-2 border-gray-300" />
-</div>
-
-
-
-
-
-
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
-        {sortedFiles.length > 0 ? (
-          sortedFiles.map((file) => (
-            <div key={file._id} className="bg-gray-100 text-black p-4 sm:p-6 rounded-lg shadow-md hover:bg-gray-400 hover:shadow-lg hover:scale-105 transition-all duration-300 transform w-full relative">
-              <button
-                onClick={() => handleDeleteFileConfirmation(file._id)}
-                className="absolute top-2 right-2 text-red-500 hover:text-red-700 hover:scale-110 transition-transform duration-300"
-              >
-                <RiDeleteBin6Line className="text-xl" />
-              </button>
-
-              <div className="flex justify-between items-center mb-2">
-                <span className={`${file.encrypted ? "bg-blue-500" : "bg-green-500"} text-white px-2 py-1 rounded-lg flex items-center text-xs sm:text-sm`}>
-                  {file.encrypted ? (
-                    <>
-                      <RiLockLine className="mr-1 text-sm sm:text-base" />
-                      Encrypted
-                    </>
-                  ) : (
-                    <>
-                      <RiCheckLine className="mr-1 text-sm sm:text-base" />
-                      Available
-                    </>
-                  )}
-                </span>
-                <span className="text-gray-500 text-xs sm:text-sm">{file.createdAt}</span>
-              </div>
-              <h2 className="text-lg sm:text-xl font-semibold mb-2">{file.fileName}</h2>
-              <div className="flex justify-between items-center">
-                <button
-                  onClick={() => navigate(`/view/${file._id}`)}
-                  className="text-blue-500 hover:underline hover:scale-105 transition-transform duration-300 text-sm sm:text-lg"
-                >
-                  View
-                </button>
-                {file.shareable && (
-                  <button
-                    onClick={() => {
-                      setFileId(file._id);
-                      fetchUsers();
-                      setShowSharePopup(true);
-                    }}
-                    className="text-blue-500 hover:underline hover:scale-105 transition-transform duration-300 text-sm sm:text-lg"
-                  >
-                    Share
-                  </button>
-                )}
-              </div>
+                      <div className="flex items-center space-x-4 flex-none w-full sm:w-auto">
+                        {file.expiry && (
+                          <span className="text-amber-400 text-xs px-3 py-1 bg-amber-400/10 rounded-full border border-amber-400/20">
+                            {remainingTime(file.expiry)} left
+                          </span>
+                        )}
+                        <button
+                          onClick={() => navigate(`/sharedView/${file._id}`)}
+                          className="text-white/70 hover:text-white hover:underline transition-colors duration-300 text-sm font-medium"
+                        >
+                          View Secret
+                        </button>
+                      </div>
+                    </li>
+                  );
+                })}
+              </ul>
             </div>
-          ))
-        ) : (
-          <h3 className="text-gray-500 text-center text-sm sm:text-xl mt-8">
-            Currently nothing to show, create files to see them here.
-          </h3>
-        )}
+          )}
+        </div>
+
+        {/* Owned Files grid */}
+        <h2 className="text-2xl font-medium mb-6">Your Notes Vault</h2>
+        <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-6">
+          {sortedFiles.length > 0 ? (
+            sortedFiles.map((file) => (
+              <div 
+                key={file._id} 
+                className="bg-neutral-900 border border-white/10 p-6 rounded-3xl hover:border-lime-400 hover:scale-[1.02] transition-all duration-500 relative group overflow-hidden shadow-xl"
+              >
+                <div className="absolute top-0 right-0 p-4 opacity-0 group-hover:opacity-100 transition-opacity duration-300 translate-y-2 group-hover:translate-y-0 text-white/50 hover:text-red-400">
+                  <button onClick={() => handleDeleteFileConfirmation(file._id)}>
+                    <RiDeleteBin6Line className="text-xl" />
+                  </button>
+                </div>
+
+                <div className="flex justify-between items-center mb-6">
+                  <span className={`inline-flex px-3 py-1 rounded-full text-xs font-semibold ${file.encrypted ? "bg-indigo-500/20 text-indigo-300 border border-indigo-500/30" : "bg-lime-400/20 text-lime-400 border border-lime-400/30"}`}>
+                    {file.encrypted ? (
+                      <><RiLockLine className="mr-1.5" /> Encrypted</>
+                    ) : (
+                      <><RiCheckLine className="mr-1.5" /> Available</>
+                    )}
+                  </span>
+                  <span className="text-white/30 text-xs">{file.createdAt?.substring(0,10)}</span>
+                </div>
+                <h3 className="text-xl font-medium mb-8 truncate">{file.fileName}</h3>
+                
+                <div className="flex justify-between items-center border-t border-white/10 pt-4 mt-auto">
+                  <button
+                    onClick={() => navigate(`/view/${file._id}`)}
+                    className="text-sm font-medium text-white/50 hover:text-white transition-colors"
+                  >
+                    View contents
+                  </button>
+                  {file.shareable && (
+                    <button
+                      onClick={() => {
+                        setFileId(file._id);
+                        fetchUsers();
+                        setShowSharePopup(true);
+                      }}
+                      className="text-sm font-medium text-lime-400 hover:text-lime-300 transition-colors"
+                    >
+                      Share access
+                    </button>
+                  )}
+                </div>
+              </div>
+            ))
+          ) : (
+            <div className="col-span-full border border-dashed border-white/10 rounded-3xl p-12 flex flex-col items-center justify-center gap-4 text-white/30">
+              <span className="text-4xl text-white/10">🗂️</span>
+              <h3 className="text-lg">Your vault is empty.</h3>
+              <p className="text-sm">Create an encrypted file to get started.</p>
+            </div>
+          )}
+        </div>
       </div>
 
       {showSharePopup && (
-  <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-    <div className="bg-white p-6 rounded-lg shadow-lg w-11/12 sm:w-1/2 lg:w-1/3">
-      <h2 className="text-xl font-semibold mb-4 text-black">Share File</h2>
-      <select
-        className="w-full p-2 border border-gray-300 rounded-lg mb-4 text-black"
-        onChange={(e) => setSelectedUser(e.target.value)}
-      >
-        <option value="">Select a user</option>
-        {users
-          .filter((user) => user._id !== currentUser._id) // Exclude the current user
-          .map((user) => (
-            <option key={user._id} value={user.email}>
-              {user.email}
-            </option>
-          ))}
-      </select>
-      <div className="flex justify-end gap-4">
-        <button
-          onClick={() => setShowSharePopup(false)}
-          className="bg-gray-500 text-black px-4 py-2 rounded-lg hover:bg-gray-700 hover:text-white transition-colors duration-300"
-        >
-          Cancel
-        </button>
-        <button
-          onClick={handleShareFile}
-          className="bg-blue-500 text-black px-4 py-2 rounded-lg hover:bg-blue-700 hover:text-white transition-colors duration-300"
-        >
-          Share
-        </button>
-      </div>
-    </div>
-  </div>
-)}
+        <div className="fixed inset-0 bg-neutral-950/80 backdrop-blur z-50 flex justify-center items-center p-4">
+          <div className="bg-neutral-900 border border-white/10 rounded-3xl p-8 max-w-sm w-full shadow-2xl">
+            <h2 className="text-2xl font-medium mb-6">Share Securely</h2>
+            <select
+              className="w-full p-3 bg-transparent border border-white/15 rounded-xl mb-6 outline-none focus:border-lime-400 text-white [&>option]:text-black"
+              onChange={(e) => setSelectedUser(e.target.value)}
+            >
+              <option value="">Select a user...</option>
+              {users
+                .filter((user) => user._id !== currentUser?._id)
+                .map((user) => (
+                  <option key={user._id} value={user.email}>
+                    {user.email}
+                  </option>
+                ))}
+            </select>
+            <div className="flex justify-end gap-3">
+              <Button variant="secondary" onClick={() => setShowSharePopup(false)}>
+                Cancel
+              </Button>
+              <Button variant="primary" onClick={handleShareFile}>
+                Share
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
 
-
-    {/* Delete Confirmation Pop-up */}
-{showDeletePopup && (
-  <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50">
-    <div className="bg-white p-6 rounded-lg shadow-lg w-80">
-      <h2 className="text-lg font-semibold mb-4 text-black">Are you sure you want to delete this file?</h2>
-      <div className="flex justify-between">
-        <button
-          onClick={() => {
-            deleteFile(deleteFileId); // Proceed with file deletion
-          }}
-          className="bg-red-500 text-white px-4 py-2 rounded-md hover:bg-red-600 transition-colors"
-        >
-          Yes
-        </button>
-        <button
-          onClick={() => setShowDeletePopup(false)} // Close the pop-up without deleting
-          className="ml-2 bg-gray-300 text-black px-4 py-2 rounded-md hover:bg-gray-400 transition-colors"
-        >
-          No
-        </button>
-      </div>
-    </div>
-  </div>
-)}
-
+      {showDeletePopup && (
+        <div className="fixed inset-0 bg-neutral-950/80 backdrop-blur z-50 flex justify-center items-center p-4">
+          <div className="bg-neutral-900 border border-white/10 rounded-3xl p-8 max-w-sm w-full shadow-2xl">
+            <h2 className="text-xl font-medium mb-6 text-center">Delete this note?</h2>
+            <p className="text-white/50 text-center text-sm mb-8">This action is permanent and cannot be undone.</p>
+            <div className="flex justify-center gap-4">
+              <Button variant="secondary" onClick={() => setShowDeletePopup(false)}>
+                Cancel
+              </Button>
+              <Button variant="primary" className="!bg-red-500 !border-red-500 !text-white hover:!bg-red-600" onClick={() => deleteFile(deleteFileId)}>
+                Delete Permanently
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
     </main>
   );
 };

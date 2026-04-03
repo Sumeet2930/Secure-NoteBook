@@ -5,21 +5,22 @@ import { twMerge } from "tailwind-merge";
 import { AnimatePresence, motion } from "framer-motion";
 import { Button } from "@/components/Button";
 import logoImage from "@/assets/images/logo.svg";
+import { Link, useNavigate } from "react-router-dom";
 
 const navLinks = [
-  { label: "Home", href: "#" },
-  { label: "Features", href: "#features" },
-  { label: "Integrations", href: "#integrations" },
-  { label: "FAQs", href: "#faqs" },
+  { label: "Landing", href: "/" },
+  { label: "Dashboard", href: "/Home" },
+  { label: "Create Note", href: "/create" },
 ];
 
 export default function Navbar() {
   const [isOpen, setIsOpen] = useState(false);
+  const navigate = useNavigate();
 
   return (
     <>
-      <section className="fixed w-full top-0 py-4 lg:py-8 z-50">
-        <div className="container max-w-5xl">
+      <section className="fixed w-full top-0 py-4 lg:py-8 z-50 pointer-events-none">
+        <div className="container max-w-5xl pointer-events-auto">
           <div className="border border-white/15 rounded-[27px] md:rounded-full bg-neutral-950/70 backdrop-blur">
             <div className="grid grid-cols-2 lg:grid-cols-3 p-2 px-4 md:pr-2 items-center">
               <div>
@@ -32,9 +33,9 @@ export default function Navbar() {
               <div className="lg:flex justify-center items-center hidden">
                 <nav className="flex gap-6 font-medium">
                   {navLinks.map((link) => (
-                    <a href={link.href} key={link.label}>
+                    <Link to={link.href} key={link.label} className="text-white/70 hover:text-white transition-colors">
                       {link.label}
-                    </a>
+                    </Link>
                   ))}
                 </nav>
               </div>
@@ -83,12 +84,14 @@ export default function Navbar() {
                 <Button
                   variant="secondary"
                   className="hidden md:inline-flex items-center"
+                  onClick={() => navigate('/login')}
                 >
                   Log In
                 </Button>
                 <Button
                   variant="primary"
                   className="hidden md:inline-flex items-center"
+                  onClick={() => navigate('/register')}
                 >
                   Sign Up
                 </Button>
@@ -104,12 +107,12 @@ export default function Navbar() {
                 >
                   <div className="flex flex-col items-center gap-4 py-4">
                     {navLinks.map((link) => (
-                      <a href={link.href} key={link.label} className="">
+                      <Link to={link.href} key={link.label} className="text-white/70 hover:text-white" onClick={() => setIsOpen(false)}>
                         {link.label}
-                      </a>
+                      </Link>
                     ))}
-                    <Button variant="secondary">Log In</Button>
-                    <Button variant="primary">Sign Up</Button>
+                    <Button variant="secondary" onClick={() => { setIsOpen(false); navigate('/login'); }}>Log In</Button>
+                    <Button variant="primary" onClick={() => { setIsOpen(false); navigate('/register'); }}>Sign Up</Button>
                   </div>
                 </motion.div>
               )}
