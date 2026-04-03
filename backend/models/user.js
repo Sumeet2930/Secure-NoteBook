@@ -2,12 +2,12 @@ const mongoose = require('mongoose');
 require('dotenv').config();
 
 const connectDB = async () => {
-  // Prevent duplicate connections in Vercel Serverless
+  // Prevent duplicate connections in dev environment
   if (mongoose.connections[0].readyState) return;
   
-  // Guard against missing Environment Variables which causes Lambda crashes
+  // Guard against missing Environment Variables which causes crashes
   if (!process.env.MONGO_URI) {
-    console.error("CRITICAL: MONGO_URI missing from Vercel Environment Variables!");
+    console.error("CRITICAL: MONGO_URI missing from Environment Variables!");
     return;
   }
 

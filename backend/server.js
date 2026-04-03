@@ -428,12 +428,12 @@ app.get('/api/current-user', authenticate, async (req, res) => {
 const port = process.env.PORT || 5050;
 const corsOrigin = process.env.FRONTEND_URL || "http://localhost:5173";
 
-if (process.env.NODE_ENV !== 'production' || !process.env.VERCEL) {
-  app.listen(port, () => {
-    console.log(`Backend server running on port ${port}`);
-    console.log(`CORS allowed origin: ${corsOrigin}`);
-  });
-}
+// Dedicated Endpoint for cron-job.org to prevent Render from sleeping
+app.get("/api/ping", (req, res) => {
+  res.status(200).send("Server is awake");
+});
 
-// Export the Express API for Vercel Serverless Functions
-module.exports = app;
+app.listen(port, () => {
+  console.log(`Backend server running on port ${port}`);
+  console.log(`CORS allowed origin: ${corsOrigin}`);
+});
