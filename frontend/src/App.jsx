@@ -9,6 +9,7 @@ import ViewNote from './components/viewNote';
 import { useEffect } from 'react'; 
 import EditNote from './components/EditNote';
 import SharedviewNote from './components/viewSharedNote';
+import LandingPage from './components/LandingPage';
 
 function App() {
   const { isDark } = useTheme(); // Use theme context
@@ -21,7 +22,8 @@ function App() {
   return (
     <Router>
       <Routes>
-        <Route path="/" element={<Register />} /> {/* Register page route */}
+        <Route path="/" element={<LandingPage />} /> {/* Landing page route */}
+        <Route path="/register" element={<Register />} /> {/* Register page route */}
         <Route path="/create" element={<Create />} /> {/* Create page route */}
         <Route path="/login" element={<Login />} /> {/* Login page route */}
         <Route path="/Home" element={<HomePage />} /> {/* Home page route */}
