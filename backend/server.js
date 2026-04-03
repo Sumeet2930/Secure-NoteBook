@@ -428,7 +428,12 @@ app.get('/api/current-user', authenticate, async (req, res) => {
 const port = process.env.PORT || 5050;
 const corsOrigin = process.env.FRONTEND_URL || "http://localhost:5173";
 
-app.listen(port, () => {
-  console.log(`Backend server running on port ${port}`);
-  console.log(`CORS allowed origin: ${corsOrigin}`);
-});
+if (process.env.NODE_ENV !== 'production' || !process.env.VERCEL) {
+  app.listen(port, () => {
+    console.log(`Backend server running on port ${port}`);
+    console.log(`CORS allowed origin: ${corsOrigin}`);
+  });
+}
+
+// Export the Express API for Vercel Serverless Functions
+module.exports = app;
