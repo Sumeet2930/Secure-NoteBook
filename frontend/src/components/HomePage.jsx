@@ -9,6 +9,7 @@ import {
 } from "react-icons/ri";
 import axios from 'axios';
 import { Button } from './Button';
+import { decryptText } from "../utils/crypto";
 
 const HomePage = () => {
   const [files, setFiles] = useState([]);
@@ -21,6 +22,13 @@ const HomePage = () => {
   const [sharedFiles, setSharedFiles] = useState([]);
   const [showDeletePopup, setShowDeletePopup] = useState(false);
   const [deleteFileId, setDeleteFileId] = useState(null);
+  
+  const [showPasscodePopup, setShowPasscodePopup] = useState(false);
+  const [passcode, setPasscode] = useState("");
+  const [passcodeError, setPasscodeError] = useState("");
+  const [selectedEncryptedFile, setSelectedEncryptedFile] = useState(null);
+  const [isDecrypting, setIsDecrypting] = useState(false);
+  
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -118,6 +126,42 @@ const HomePage = () => {
     } catch (error) {
       console.error("Error sharing file:", error);
       alert("Error occurred while sharing the file.");
+    }
+  };
+
+  const handleViewNote = (file) => {
+    if (file.encrypted) {
+      setSelectedEncryptedFile(file);
+      setPasscode("");
+      setPasscodeError("");
+      setShowPasscodePopup(true);
+    } else {
+      navigate(`/view/${file._id}`);
+    }
+  };
+
+  const submitPasscode = async () => {
+    if (!passcode) {
+      setPasscodeError("Passcode is required");
+      return;
+    }
+    setIsDecrypting(true);
+    setPasscodeError("");
+    try {
+      const response = await api.get(`/api/files/${selectedEncryptedFile._id}`);
+      const fileData = response.data;
+      try {
+        const plaintext = await decryptText(fileData.content, fileData.iv, fileData.salt, passcode);
+        setShowPasscodePopup(false);
+        navigate(`/view/${selectedEncryptedFile._id}`, { state: { decryptedContent: plaintext } });
+      } catch (err) {
+        setPasscodeError("Invalid passcode or corrupted data.");
+      }
+    } catch (error) {
+      console.error("Error fetching file for decryption:", error);
+      setPasscodeError("Unable to fetch file data.");
+    } finally {
+      setIsDecrypting(false);
     }
   };
 
@@ -242,7 +286,7 @@ const HomePage = () => {
                 
                 <div className="flex justify-between items-center border-t border-white/10 pt-4 mt-auto">
                   <button
-                    onClick={() => navigate(`/view/${file._id}`)}
+                    onClick={() => handleViewNote(file)}
                     className="text-sm font-medium text-white/50 hover:text-white transition-colors"
                   >
                     View contents
@@ -271,6 +315,32 @@ const HomePage = () => {
           )}
         </div>
       </div>
+
+      {showPasscodePopup && (
+        <div className="fixed inset-0 bg-neutral-950/80 backdrop-blur z-50 flex justify-center items-center p-4">
+          <div className="bg-neutral-900 border border-white/10 rounded-3xl p-8 max-w-sm w-full shadow-2xl">
+            <h2 className="text-2xl font-medium mb-2">Encrypted Vault</h2>
+            <p className="text-white/50 mb-6 text-sm">Enter the passcode to unlock this note.</p>
+            <input
+              type="password"
+              className="w-full p-3 bg-transparent border border-white/15 rounded-xl mb-2 outline-none focus:border-lime-400 text-white placeholder-white/30"
+              placeholder="Enter passcode"
+              value={passcode}
+              onChange={(e) => setPasscode(e.target.value)}
+              onKeyDown={(e) => { if(e.key === 'Enter') submitPasscode(); }}
+            />
+            {passcodeError && <p className="text-red-500 text-sm mb-4">{passcodeError}</p>}
+            <div className="flex justify-end gap-3 mt-6">
+              <Button variant="secondary" onClick={() => setShowPasscodePopup(false)}>
+                Cancel
+              </Button>
+              <Button variant="primary" onClick={submitPasscode}>
+                {isDecrypting ? "Unlocking..." : "Unlock"}
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {showSharePopup && (
         <div className="fixed inset-0 bg-neutral-950/80 backdrop-blur z-50 flex justify-center items-center p-4">
