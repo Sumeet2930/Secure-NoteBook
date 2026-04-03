@@ -71,9 +71,9 @@ const Create = () => {
   };
 
   return (
-    <main className="w-full min-h-screen bg-neutral-950 text-white font-sans antialiased overflow-y-auto">
+    <main className="w-full min-h-screen font-body antialiased overflow-y-auto">
       {/* App Header */}
-      <nav className="sticky top-0 bg-neutral-950/80 backdrop-blur border-b border-white/10 z-40 px-6 py-4 flex justify-between items-center">
+      <nav className="sticky top-0 bg-[#131313]/70 backdrop-blur border-b border-white/10 z-40 px-6 py-4 flex justify-between items-center">
         <div className="flex items-center space-x-3">
           <img src={secureIcon} alt="icon" className="h-7 w-7 opacity-90" />
           <h3 className="text-xl font-medium tracking-tight">Secure-NoteBook</h3>

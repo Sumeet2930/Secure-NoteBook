@@ -59,7 +59,7 @@ const ViewNote = () => {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center min-h-screen bg-neutral-950">
+      <div className="flex items-center justify-center min-h-screen">
         <div className="text-xl font-medium text-white/50 animate-pulse">Decrypting content...</div>
       </div>
     );
@@ -67,7 +67,7 @@ const ViewNote = () => {
 
   if (!fileData) {
     return (
-      <div className="flex flex-col items-center justify-center min-h-screen bg-neutral-950 space-y-4">
+      <div className="flex flex-col items-center justify-center min-h-screen space-y-4">
         <div className="text-2xl font-medium text-white/50">
           File not found or access denied.
         </div>
@@ -78,22 +78,22 @@ const ViewNote = () => {
 
   if (isEncrypted) {
     return (
-      <main className="w-full min-h-screen bg-neutral-950 text-white font-sans antialiased overflow-y-auto flex items-center justify-center p-4">
-        <div className="bg-neutral-900 border border-white/10 rounded-3xl p-8 max-w-sm w-full shadow-2xl relative">
+      <main className="w-full min-h-screen font-body antialiased overflow-y-auto flex items-center justify-center p-4">
+        <div className="bg-surface-container-highest border border-white/10 rounded-3xl p-8 max-w-sm w-full shadow-2xl relative">
           <button onClick={() => navigate('/Home')} className="absolute top-4 right-4 text-white/30 hover:text-white transition-colors">
             ✕
           </button>
-          <h2 className="text-2xl font-medium mb-2 text-center mt-2">Encrypted Note</h2>
+          <h2 className="text-2xl font-bold font-headline mb-2 text-center mt-2">Encrypted Note</h2>
           <p className="text-white/50 mb-8 text-sm text-center">E2E Protected. Enter the passcode to unlock.</p>
           <input 
             type="password" 
             placeholder="Enter secure passcode"
-            className="w-full p-3 bg-transparent border border-white/15 rounded-xl mb-4 outline-none focus:border-lime-400 text-white placeholder-white/30"
+            className="w-full p-3 bg-transparent border border-outline-variant rounded-xl mb-4 outline-none focus:border-primary text-white placeholder-white/30 font-label"
             value={passcode}
             onChange={(e) => setPasscode(e.target.value)}
             onKeyDown={(e) => { if(e.key === 'Enter') handleDecrypt(); }}
           />
-          {cryptoError && <p className="text-red-500 text-sm mb-4 text-center">{cryptoError}</p>}
+          {cryptoError && <p className="text-error text-sm mb-4 text-center">{cryptoError}</p>}
           <Button variant="primary" className="w-full justify-center" onClick={handleDecrypt}>
             Unlock Content
           </Button>
@@ -103,9 +103,9 @@ const ViewNote = () => {
   }
 
   return (
-    <main className="w-full min-h-screen bg-neutral-950 text-white font-sans antialiased overflow-y-auto">
+    <main className="w-full min-h-screen text-on-surface font-body antialiased overflow-y-auto">
       {/* App Header */}
-      <nav className="sticky top-0 bg-neutral-950/80 backdrop-blur border-b border-white/10 z-40 px-6 py-4 flex justify-between items-center">
+      <nav className="sticky top-0 bg-[#131313]/70 backdrop-blur border-b border-white/10 z-40 px-6 py-4 flex justify-between items-center">
         <div className="flex items-center space-x-3">
           <img src={secureIcon} alt="icon" className="h-7 w-7 opacity-90" />
           <h3 className="text-xl font-medium tracking-tight">Secure-NoteBook</h3>
