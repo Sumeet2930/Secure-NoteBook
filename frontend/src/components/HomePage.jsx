@@ -37,6 +37,9 @@ const HomePage = () => {
   const [newProfileName, setNewProfileName] = useState("");
   const [isKidsProfile, setIsKidsProfile] = useState(false);
 
+  // New Dashboard States
+  const [currentTab, setCurrentTab] = useState("vault"); // "vault" | "pinned" | "shared" | "archived"
+
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -101,6 +104,19 @@ const HomePage = () => {
       setShowDeletePopup(false);
     } catch (error) {
       console.error("Error deleting file:", error);
+    }
+  };
+
+  // Toggle Pinned / Archived Logic
+  const toggleNoteState = async (fileId, field, currentValue) => {
+    try {
+      await api.patch(`/api/notes/${fileId}/toggle`, { [field]: !currentValue });
+      
+      // Update local state to reflect UI instantly
+      setSortedFiles(prev => prev.map(f => f._id === fileId ? { ...f, [field]: !currentValue } : f));
+      setFiles(prev => prev.map(f => f._id === fileId ? { ...f, [field]: !currentValue } : f));
+    } catch (error) {
+      console.error(`Error toggling ${field}:`, error);
     }
   };
 
@@ -169,6 +185,27 @@ const HomePage = () => {
     } finally {
       setIsDecrypting(false);
     }
+  };
+
+  // Filter rendering based on active Sidebar Tab
+  let displayedFiles = [];
+  if (currentTab === "vault") {
+    displayedFiles = sortedFiles.filter(f => !f.isArchived); // Everything unarchived
+  } else if (currentTab === "pinned") {
+    displayedFiles = sortedFiles.filter(f => f.isPinned && !f.isArchived); // Only pinned
+  } else if (currentTab === "archived") {
+    displayedFiles = sortedFiles.filter(f => f.isArchived); // Only archived
+  }
+
+  const remainingTime = (expiry) => {
+    const diff = new Date(expiry) - new Date();
+    if (diff <= 0) return "Expired";
+    const hours = Math.floor(diff / (1000 * 60 * 60));
+    const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+    const seconds = Math.floor((diff % (1000 * 60)) / 1000);
+    if (hours > 0) return `${hours}h ${minutes}m`;
+    if (minutes > 0) return `${minutes}m ${seconds}s`;
+    return `${seconds}s`;
   };
 
   return (
@@ -261,20 +298,20 @@ const HomePage = () => {
           <p className="font-label uppercase text-[10px] tracking-widest text-zinc-500">Protocol Active</p>
         </div>
         <nav className="flex-1 space-y-1">
-          <div className="flex items-center px-6 py-3 bg-surface-container text-primary border-l-4 border-primary font-bold cursor-pointer group transition-all">
-            <span className="material-symbols-outlined mr-3" style={{ fontVariationSettings: "'FILL' 1" }}>lock</span>
+          <div onClick={() => setCurrentTab('vault')} className={`flex items-center px-6 py-3 cursor-pointer group transition-all duration-300 ${currentTab === 'vault' ? 'bg-surface-container text-primary border-l-4 border-primary font-bold' : 'text-zinc-500 hover:text-zinc-300 hover:bg-[#131313] hover:translate-x-1'}`}>
+            <span className="material-symbols-outlined mr-3" style={currentTab === 'vault' ? { fontVariationSettings: "'FILL' 1" } : {}}>lock</span>
             <span className="font-label uppercase text-xs tracking-widest">Vault</span>
           </div>
-          <div className="flex items-center px-6 py-3 text-zinc-500 hover:text-zinc-300 hover:bg-[#131313] transition-all cursor-pointer hover:translate-x-1 duration-300">
-            <span className="material-symbols-outlined mr-3">push_pin</span>
+          <div onClick={() => setCurrentTab('pinned')} className={`flex items-center px-6 py-3 cursor-pointer group transition-all duration-300 ${currentTab === 'pinned' ? 'bg-surface-container text-primary border-l-4 border-primary font-bold' : 'text-zinc-500 hover:text-zinc-300 hover:bg-[#131313] hover:translate-x-1'}`}>
+            <span className="material-symbols-outlined mr-3" style={currentTab === 'pinned' ? { fontVariationSettings: "'FILL' 1" } : {}}>push_pin</span>
             <span className="font-label uppercase text-xs tracking-widest">Pinned</span>
           </div>
-          <div className="flex items-center px-6 py-3 text-zinc-500 hover:text-zinc-300 hover:bg-[#131313] transition-all cursor-pointer hover:translate-x-1 duration-300">
-            <span className="material-symbols-outlined mr-3">group</span>
+          <div onClick={() => setCurrentTab('shared')} className={`flex items-center px-6 py-3 cursor-pointer group transition-all duration-300 ${currentTab === 'shared' ? 'bg-surface-container text-primary border-l-4 border-primary font-bold' : 'text-zinc-500 hover:text-zinc-300 hover:bg-[#131313] hover:translate-x-1'}`}>
+            <span className="material-symbols-outlined mr-3" style={currentTab === 'shared' ? { fontVariationSettings: "'FILL' 1" } : {}}>group</span>
             <span className="font-label uppercase text-xs tracking-widest">Shared</span>
           </div>
-          <div className="flex items-center px-6 py-3 text-zinc-500 hover:text-zinc-300 hover:bg-[#131313] transition-all cursor-pointer hover:translate-x-1 duration-300">
-            <span className="material-symbols-outlined mr-3">inventory_2</span>
+          <div onClick={() => setCurrentTab('archived')} className={`flex items-center px-6 py-3 cursor-pointer group transition-all duration-300 ${currentTab === 'archived' ? 'bg-surface-container text-primary border-l-4 border-primary font-bold' : 'text-zinc-500 hover:text-zinc-300 hover:bg-[#131313] hover:translate-x-1'}`}>
+            <span className="material-symbols-outlined mr-3" style={currentTab === 'archived' ? { fontVariationSettings: "'FILL' 1" } : {}}>inventory_2</span>
             <span className="font-label uppercase text-xs tracking-widest">Archived</span>
           </div>
         </nav>
@@ -295,29 +332,19 @@ const HomePage = () => {
           <p className="font-label text-sm text-secondary tracking-widest uppercase">Encryption Status: AES-256 ACTIVE</p>
         </header>
 
-        {/* Shared With Me */}
-        <section className="mb-16">
-          <div className="flex items-center gap-3 mb-6">
-            <span className="material-symbols-outlined text-primary">share</span>
-            <h3 className="font-headline text-xl font-bold">Shared With Me</h3>
-          </div>
-          
-          <div className="glass-panel bg-surface-container-high/40 rounded-2xl p-6 flex gap-6 overflow-x-auto no-scrollbar">
-            {sharedFiles.length === 0 ? (
-              <p className="text-on-surface-variant font-label text-sm w-full font-bold">Waiting for incoming signals...</p>
-            ) : (
-                sharedFiles.map((file) => {
-                  const remainingTime = (expiry) => {
-                    const diff = new Date(expiry) - new Date();
-                    if (diff <= 0) return "Expired";
-                    const hours = Math.floor(diff / (1000 * 60 * 60));
-                    const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
-                    const seconds = Math.floor((diff % (1000 * 60)) / 1000);
-                    if (hours > 0) return `${hours}h ${minutes}m`;
-                    if (minutes > 0) return `${minutes}m ${seconds}s`;
-                    return `${seconds}s`;
-                  };
-                  return (
+        {/* Global Horizontal Shared With Me Showcase (Hidden if we actively clicked Shared Tab to view full grid) */}
+        {currentTab === 'vault' && (
+          <section className="mb-16">
+            <div className="flex items-center gap-3 mb-6">
+              <span className="material-symbols-outlined text-primary">share</span>
+              <h3 className="font-headline text-xl font-bold">Shared With Me</h3>
+            </div>
+            
+            <div className="glass-panel bg-surface-container-high/40 rounded-2xl p-6 flex gap-6 overflow-x-auto no-scrollbar">
+              {sharedFiles.length === 0 ? (
+                <p className="text-on-surface-variant font-label text-sm w-full font-bold">Waiting for incoming signals...</p>
+              ) : (
+                  sharedFiles.map((file) => (
                     <div key={file._id} className="min-w-[320px] bg-surface-container-highest/50 p-5 rounded-xl border border-outline-variant/10 flex flex-col justify-between">
                       <div>
                         <div className="flex justify-between items-start mb-4">
@@ -343,31 +370,54 @@ const HomePage = () => {
                         </button>
                       </div>
                     </div>
-                  );
-                })
-            )}
-          </div>
-        </section>
+                  ))
+              )}
+            </div>
+          </section>
+        )}
 
-        {/* Your Notes Vault */}
+        {/* Notes Grid Based on Active Tab */}
         <section>
           <div className="flex items-center justify-between mb-8">
             <div className="flex items-center gap-3">
-              <span className="material-symbols-outlined text-primary">cached</span>
-              <h3 className="font-headline text-xl font-bold">Your Notes Vault</h3>
-            </div>
-            <div className="flex gap-2">
-              <button className="p-2 rounded-lg bg-surface-container border border-outline-variant/10 text-on-surface-variant hover:text-primary transition-colors">
-                <span className="material-symbols-outlined">grid_view</span>
-              </button>
-              <button className="p-2 rounded-lg bg-background border border-outline-variant/10 text-on-surface-variant hover:text-primary transition-colors">
-                <span className="material-symbols-outlined">list</span>
-              </button>
+              <span className="material-symbols-outlined text-primary">
+                {currentTab === 'vault' ? 'cached' : currentTab === 'pinned' ? 'push_pin' : currentTab === 'archived' ? 'inventory_2' : 'group'}
+              </span>
+              <h3 className="font-headline text-xl font-bold capitalize">{currentTab} Notes</h3>
             </div>
           </div>
           
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {sortedFiles.map(file => (
+            
+            {/* If currently in completely Shared view mode, map the large grid of shared! */}
+            {currentTab === "shared" && sharedFiles.length === 0 && (
+              <p className="text-on-surface-variant col-span-full">No shared files found.</p>
+            )}
+            {currentTab === "shared" && sharedFiles.map(file => (
+              <div key={file._id} className="group bg-surface-container/60 glass-panel p-6 rounded-2xl border border-outline-variant/15 hover:border-primary/30 transition-all duration-300 relative overflow-hidden">
+                <div className="absolute top-0 right-0 w-32 h-32 bg-primary/5 blur-[60px] pointer-events-none group-hover:bg-primary/10 transition-all"></div>
+                <div className="flex justify-between items-start mb-10 z-10 relative">
+                  <div className="bg-primary/10 text-primary px-3 py-1 rounded-full text-[10px] font-label font-bold flex items-center gap-1.5 border border-primary/20">
+                    <span className="material-symbols-outlined text-[14px]">share</span>
+                    Shared
+                  </div>
+                </div>
+                <h4 className="text-2xl font-bold tracking-tight mb-2 truncate group-hover:text-primary transition-colors z-10 relative">{file.fileName}</h4>
+                <p className="font-label text-[10px] text-on-surface-variant tracking-widest mb-10 z-10 relative uppercase">OWNER: {file.email}</p>
+                <div className="flex flex-col gap-4 z-10 relative">
+                  <button onClick={() => navigate(`/sharedView/${file._id}`)} className="w-full py-2.5 bg-surface-container-highest text-sm font-bold rounded-lg border border-outline-variant/10 hover:bg-surface-bright transition-colors text-white">
+                    View Secret
+                  </button>
+                </div>
+              </div>
+            ))}
+
+            {/* Default Mapping for Vault, Pinned, and Archived */}
+            {currentTab !== "shared" && displayedFiles.length === 0 && (
+               <p className="text-white/30 text-sm font-label uppercase tracking-widest col-span-full w-full py-8 text-center italic">No data nodes discovered in this sector.</p>
+            )}
+            
+            {currentTab !== "shared" && displayedFiles.map(file => (
               <div key={file._id} className="group bg-surface-container/60 glass-panel p-6 rounded-2xl border border-outline-variant/15 hover:border-primary/30 transition-all duration-300 relative overflow-hidden">
                 <div className="absolute top-0 right-0 w-32 h-32 bg-primary/5 blur-[60px] pointer-events-none group-hover:bg-primary/10 transition-all"></div>
                 
@@ -383,9 +433,19 @@ const HomePage = () => {
                       Available
                     </div>
                   )}
-                  <button onClick={() => handleDeleteFileConfirmation(file._id)}>
-                    <span className="material-symbols-outlined text-zinc-600 group-hover:text-error cursor-pointer transition-colors">delete</span>
-                  </button>
+                  
+                  {/* Action Toolbar */}
+                  <div className="flex gap-3">
+                    <button onClick={() => toggleNoteState(file._id, "isPinned", file.isPinned)} title={file.isPinned ? "Unpin Note" : "Pin Note"}>
+                      <span className={`material-symbols-outlined transition-colors text-[20px] ${file.isPinned ? 'text-primary' : 'text-zinc-600 hover:text-primary'}`} style={file.isPinned ? {fontVariationSettings:"'FILL' 1"} : {}}>push_pin</span>
+                    </button>
+                    <button onClick={() => toggleNoteState(file._id, "isArchived", file.isArchived)} title={file.isArchived ? "Unarchive" : "Archive Note"}>
+                      <span className={`material-symbols-outlined transition-colors text-[20px] ${file.isArchived ? 'text-primary' : 'text-zinc-600 hover:text-primary'}`} style={file.isArchived ? {fontVariationSettings:"'FILL' 1"} : {}}>inventory_2</span>
+                    </button>
+                    <button onClick={() => handleDeleteFileConfirmation(file._id)} title="Delete Note">
+                      <span className="material-symbols-outlined text-zinc-600 hover:text-error transition-colors text-[20px]">delete</span>
+                    </button>
+                  </div>
                 </div>
                 
                 <h4 className="text-2xl font-bold tracking-tight mb-2 truncate group-hover:text-primary transition-colors z-10 relative">{file.fileName}</h4>
@@ -404,12 +464,14 @@ const HomePage = () => {
               </div>
             ))}
 
-            <div onClick={() => navigate('/create')} className="group border-2 border-dashed border-outline-variant/20 rounded-2xl flex flex-col items-center justify-center p-12 hover:border-primary/50 hover:bg-primary/5 transition-all cursor-pointer z-10 relative">
-              <div className="w-16 h-16 rounded-full bg-surface-container flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
-                <span className="material-symbols-outlined text-3xl text-zinc-500 group-hover:text-primary">add</span>
+            {currentTab === 'vault' && (
+              <div onClick={() => navigate('/create')} className="group border-2 border-dashed border-outline-variant/20 rounded-2xl flex flex-col items-center justify-center p-12 hover:border-primary/50 hover:bg-primary/5 transition-all cursor-pointer z-10 relative min-h-[280px]">
+                <div className="w-16 h-16 rounded-full bg-surface-container flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
+                  <span className="material-symbols-outlined text-3xl text-zinc-500 group-hover:text-primary">add</span>
+                </div>
+                <p className="font-label text-xs text-on-surface-variant uppercase tracking-widest font-bold">Initialize New entry</p>
               </div>
-              <p className="font-label text-xs text-on-surface-variant uppercase tracking-widest font-bold">Initialize New entry</p>
-            </div>
+            )}
           </div>
         </section>
       </main>

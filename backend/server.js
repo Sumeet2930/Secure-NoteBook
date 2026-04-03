@@ -384,6 +384,33 @@ app.put('/api/notes/:fileId', async (req, res) => {
   }
 });
 
+// Toggle Pinned / Archived states safely
+app.patch('/api/notes/:fileId/toggle', authenticate, async (req, res) => {
+  try {
+    const { fileId } = req.params;
+    const { isPinned, isArchived } = req.body;
+    
+    let updateFields = {};
+    if (isPinned !== undefined) updateFields.isPinned = isPinned;
+    if (isArchived !== undefined) updateFields.isArchived = isArchived;
+
+    const updatedNote = await userFile.findOneAndUpdate(
+      { _id: fileId, userId: req.userId }, // Ensure ownership
+      { $set: updateFields },
+      { new: true }
+    );
+
+    if (!updatedNote) {
+      return res.status(404).json({ message: "Note not found or unauthorized to toggle" });
+    }
+
+    res.json({ message: "Note state toggled successfully", note: updatedNote });
+  } catch (error) {
+    console.error("Error toggling note state:", error);
+    res.status(500).json({ message: "An error occurred while toggling the note" });
+  }
+});
+
 
 
 app.delete('/api/files/:fileId', async (req, res) => {

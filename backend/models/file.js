@@ -45,6 +45,14 @@ const fileSchema = mongoose.Schema({
   updatedAt: {
     type: String, // Change type to String to store formatted date
   },
+  isPinned: {
+    type: Boolean,
+    default: false,
+  },
+  isArchived: {
+    type: Boolean,
+    default: false,
+  },
   sharedWith: [{ type: mongoose.Schema.Types.ObjectId, ref: "user" }],
 });
 
