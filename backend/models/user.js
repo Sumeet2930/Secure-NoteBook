@@ -1,7 +1,25 @@
 const mongoose = require('mongoose');
 require('dotenv').config();
 
-mongoose.connect(process.env.MONGO_URI);
+const connectDB = async () => {
+  // Prevent duplicate connections in Vercel Serverless
+  if (mongoose.connections[0].readyState) return;
+  
+  // Guard against missing Environment Variables which causes Lambda crashes
+  if (!process.env.MONGO_URI) {
+    console.error("CRITICAL: MONGO_URI missing from Vercel Environment Variables!");
+    return;
+  }
+
+  try {
+    await mongoose.connect(process.env.MONGO_URI);
+    console.log("MongoDB securely connected.");
+  } catch (err) {
+    console.error("MongoDB Connection Error: ", err);
+  }
+};
+
+connectDB();
 
 // Subschema for shared files
 const sharedFileSchema = mongoose.Schema({
