@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import api from "../utils/api";
 import { useNavigate, Link } from "react-router-dom";
 import { decryptText } from "../utils/crypto";
+import logoUrl from '../assets/images/logo.svg';
 
 // Retained specific icons inside the logic if needed, but styling prefers Google Material Symbols.
 import { 
@@ -213,9 +214,8 @@ const HomePage = () => {
       {/* TopNavBar */}
       <nav className="fixed top-0 w-full z-50 bg-[#131313]/70 backdrop-blur-xl shadow-[0_0_20px_rgba(0,0,0,0.4)]">
         <div className="flex justify-between items-center h-16 px-6 w-full max-w-screen-2xl mx-auto">
-          <div className="text-xl font-bold tracking-tighter text-[#a3e635] flex items-center gap-2">
-            <span className="material-symbols-outlined" style={{ fontVariationSettings: "'FILL' 0, 'wght' 400" }}>terminal</span>
-            Secure-NoteBook
+          <div className="flex items-center justify-center cursor-pointer hover:opacity-90 transition-opacity" onClick={() => navigate('/Home')}>
+            <img src={logoUrl} alt="Secure-NoteBook Logo" className="h-8 max-w-full select-none" />
           </div>
           <div className="hidden md:flex items-center gap-8 font-['Inter'] font-medium text-sm tracking-tight text-white pl-20">
             <Link className="text-[#a3e635] border-b-2 border-[#a3e635] pb-1 transition-colors duration-200" to="/Home">Dashboard</Link>
