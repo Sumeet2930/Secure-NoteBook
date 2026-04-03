@@ -5,7 +5,7 @@ import { useScroll, useTransform } from "framer-motion";
 import Tag from "@/components/Tag";
 import { twMerge } from "tailwind-merge";
 
-const text = `You're racing to create exceptional work, but traditional design tools slow you down with unnecessary complexity and steep learning curves.`;
+const text = `You want to freely capture ideas and data, but traditional note-taking apps leave you exposed to privacy breaches and lack strong encryption.`;
 const words = text.split(" ");
 
 export default function Introduction() {
@@ -29,10 +29,10 @@ export default function Introduction() {
       <div className="container">
         <div className="sticky top-20 md:top-28 lg:top-36">
           <div className="flex justify-center">
-            <Tag>Introducing Layers</Tag>
+            <Tag>Introducing Secure-NoteBook</Tag>
           </div>
           <div className="text-4xl md:text-6xl lg:text-7xl text-center font-medium mt-10">
-            <span className="">Your creative process deserves better.</span>{" "}
+            <span className="">Your sensitive information deserves better.</span>{" "}
             <span>
               {words.map((word, wordIndex) => (
                 <span
@@ -45,7 +45,7 @@ export default function Introduction() {
               ))}
             </span>
             <span className="text-lime-400 block">
-              That&apos;s why we built Layers.
+              That&apos;s why we built Secure-NoteBook.
             </span>
           </div>
         </div>
